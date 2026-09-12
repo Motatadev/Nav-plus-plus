@@ -134,8 +134,13 @@ WebView2 check, 30-language selector, `HKLM/HKCU\Software\Nav++\Lang`.
 
 ## 6. Portable version (test without installing)
 
-No installer files and no `Nav++.exe` are tracked in git — binaries stay local.
-For quick retests, build the portable zip (never committed, see `.gitignore`):
+A ready-to-run test build is committed in this repo:
+**`Nav++-Portable-1.0.0.zip`** (root folder) — unzip anywhere, keep the files
+together, double-click `Nav++.exe`. Needs WebView2 Runtime (preinstalled on
+Win10/11). Close every other Nav++ copy first — all copies share
+`%APPDATA%\Nav++\WebViewData`, and WebView2 locks it to one instance.
+
+To rebuild it yourself (the zip is the only binary tracked in git):
 
 ```powershell
 # 1. Build Release (§4), then pack:
