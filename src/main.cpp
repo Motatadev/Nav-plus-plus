@@ -407,7 +407,7 @@ std::wstring GetNewTabUrl() {
     if (p != std::wstring::npos) d = d.substr(0, p + 1);
     std::wstring f = d + L"newtab.html";
     if (GetFileAttributesW(f.c_str()) == INVALID_FILE_ATTRIBUTES)
-        f = L"C:\\Users\\Motata\\Downloads\\navigateur-vs\\navigateur\\newtab.html"; // dev fallback
+        f = L"C:\\Users\\Motata\\Downloads\\navigateur-vs\\src\\newtab.html"; // dev fallback
     for (auto &c : f) if (c == L'\\') c = L'/';
     std::wstring lang = GetAppLang();
     std::wstring th = ThemePath();

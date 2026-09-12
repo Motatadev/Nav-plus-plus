@@ -22,8 +22,8 @@ ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayName={#MyAppName}
 VersionInfoVersion=1.0.0.0
 VersionInfoDescription=Nav++ installer
-SetupIconFile=C:\Users\Motata\Downloads\navigateur-vs\navigateur\app.ico
-WizardSmallImageFile=C:\Users\Motata\Downloads\navigateur-vs\navigateur\navpp.png
+SetupIconFile=C:\Users\Motata\Downloads\navigateur-vs\src\app.ico
+WizardSmallImageFile=C:\Users\Motata\Downloads\navigateur-vs\src\logo.png
 
 [Languages]
 Name: "arabic"; MessagesFile: "compiler:Languages\\Arabic.isl"
@@ -63,7 +63,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "C:\Users\Motata\Downloads\navigateur-vs\x64\Release\Nav++.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Motata\Downloads\navigateur-vs\x64\Release\WebView2Loader.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Motata\Downloads\navigateur-vs\navigateur\newtab.html"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Motata\Downloads\navigateur-vs\src\newtab.html"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

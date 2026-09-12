@@ -1,6 +1,9 @@
 # Build outputs
 x64/
 installer/*.exe
+installer/*.zip
+portable/
+*.zip
 *.ilk
 *.pdb
 *.tlog

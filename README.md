@@ -48,17 +48,17 @@ Get-ChildItem "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MS
 
 ```
 navigateur-vs/
-  navigateur.sln
+  NavPlusPlus.sln
   installer.iss                 # Inno Setup script (30 langs, registry, shortcuts)
   README.md                     # this tutorial
-  navigateur/
+  src/
     main.cpp                    # ~1000 lines: UI + tabs + backend + themes + langs
     newtab.html                 # start page (SVG icons, DDG search, ?lang=&theme=)
     app.rc                      # version info (Nav++ 1.0.0.0) + icon
-    app.ico                     # multi-size icon (from navpp.png via ImageMagick)
-    navpp.png                   # source logo (save yours here)
+    app.ico                     # multi-size icon (from logo.png via ImageMagick)
+    logo.png                   # source logo (save yours here)
     packages.config             # Microsoft.Web.WebView2
-    navigateur.vcxproj          # TargetName Nav++.exe, toolset v145
+    NavPlusPlus.vcxproj       # TargetName Nav++.exe, toolset v145
   x64/Release/Nav++.exe         # build output
   x64/Release/WebView2Loader.dll
   installer/Nav++-Setup-1.0.0.exe
@@ -80,14 +80,14 @@ Runtime data (per user, auto-created):
 ### 4.1 Restore WebView2 (first time)
 
 ```powershell
-C:\Users\Motata\AppData\Local\Temp\opencode\nuget.exe restore "C:\Users\Motata\Downloads\navigateur-vs\navigateur.sln"
+C:\Users\Motata\AppData\Local\Temp\opencode\nuget.exe restore "C:\Users\Motata\Downloads\navigateur-vs\NavPlusPlus.sln"
 ```
 
-Or: open `navigateur.sln` in Visual Studio → right-click solution → Restore NuGet.
+Or: open `NavPlusPlus.sln` in Visual Studio → right-click solution → Restore NuGet.
 
 ### 4.2 Build from Visual Studio
 
-1. Open `navigateur.sln` (VS 18 Community).
+1. Open `NavPlusPlus.sln` (VS 18 Community).
 2. Select `x64` + `Release`.
 3. `Build → Build Solution` (or `F5` to run).
 
@@ -95,7 +95,7 @@ Or: open `navigateur.sln` in Visual Studio → right-click solution → Restore 
 
 ```powershell
 & "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" `
-  "C:\Users\Motata\Downloads\navigateur-vs\navigateur.sln" `
+  "C:\Users\Motata\Downloads\navigateur-vs\NavPlusPlus.sln" `
   /p:Configuration=Release /p:Platform=x64 /verbosity:minimal
 ```
 
@@ -132,7 +132,30 @@ WebView2 check, 30-language selector, `HKLM/HKCU\Software\Nav++\Lang`.
 
 ---
 
-## 6. Theming with `custom.css` (A–Z)
+## 6. Portable version (test without installing)
+
+No installer files and no `Nav++.exe` are tracked in git — binaries stay local.
+For quick retests, build the portable zip (never committed, see `.gitignore`):
+
+```powershell
+# 1. Build Release (§4), then pack:
+New-Item -ItemType Directory -Path "$env:TEMP\Nav++-Portable" -Force
+Copy-Item "C:\Users\Motata\Downloads\navigateur-vs\x64\Release\Nav++.exe",
+  "C:\Users\Motata\Downloads\navigateur-vs\x64\Release\WebView2Loader.dll",
+  "C:\Users\Motata\Downloads\navigateur-vs\src\newtab.html" `
+  -Destination "$env:TEMP\Nav++-Portable\" -Force
+Compress-Archive -Path "$env:TEMP\Nav++-Portable\*" `
+  -DestinationPath "C:\Users\Motata\Downloads\navigateur-vs\installer\Nav++-Portable-1.0.0.zip" -Force
+```
+
+Unzip anywhere, keep the files together, double-click `Nav++.exe`.
+Needs WebView2 Runtime (preinstalled on Win10/11).
+Close every other Nav++ copy first — all copies share
+`%APPDATA%\Nav++\WebViewData`, and WebView2 locks it to one instance.
+
+---
+
+## 7. Theming with `custom.css` (A–Z)
 
 File: `%APPDATA%\Nav++\custom.css` (auto-created on first run).
 
@@ -180,7 +203,7 @@ Save → Settings → **Recharger**. Broken file = fallback Chrome gray.
 
 ---
 
-## 7. Languages (app follows the installer)
+## 8. Languages (app follows the installer)
 
 - Installer writes `{language}` to `HKLM/HKCU\Software\Nav++\Lang` (`[Registry]`).
 - `GetAppLang()` + `T(key)` translate: `ph` (address placeholder),
@@ -191,9 +214,9 @@ Save → Settings → **Recharger**. Broken file = fallback Chrome gray.
 
 ---
 
-## 8. How to code inside (recipes)
+## 9. How to code inside (recipes)
 
-All in `navigateur/main.cpp` unless noted.
+All in `src/main.cpp` unless noted.
 
 ### 8.1 Add a toolbar button
 
@@ -231,7 +254,7 @@ re-renders (`ShowInternalPage`). Same pattern for
 
 ---
 
-## 9. WebView2 gotchas (read before debugging)
+## 10. WebView2 gotchas (read before debugging)
 
 | Symptom | Cause → fix |
 |---|---|
@@ -245,28 +268,28 @@ re-renders (`ShowInternalPage`). Same pattern for
 
 ---
 
-## 10. Rename / version / icon
+## 11. Rename / version / icon
 
 - Display name: `installer.iss` (`MyAppName`), `app.rc` (all `VALUE`s).
-- Binary: `navigateur.vcxproj` → `<TargetName>Nav++</TargetName>`.
+- Binary: `src/NavPlusPlus.vcxproj` → `<TargetName>Nav++</TargetName>`.
 - Window: `wWinMain` class `NavPlusPlus`, title `Nav++`.
 - Data dir: `GetDataDir()` (`%APPDATA%\Nav++`).
-- Icon: save logo as `navigateur\navpp.png`, then
+- Icon: save logo as `navigateur\logo.png`, then
 
 ```powershell
-& "$env:ProgramFiles\ImageMagick-7.1.2-Q16-HDRI\magick.exe" navpp.png -define icon:auto-resize=16,24,32,48,64,128,256 app.ico
+& "$env:ProgramFiles\ImageMagick-7.1.2-Q16-HDRI\magick.exe" logo.png -define icon:auto-resize=16,24,32,48,64,128,256 app.ico
 ```
 
 `app.rc` must contain `1 ICON "app.ico"`. Rebuild + recompile installer.
 
 ---
 
-## 11. Publish to GitHub
+## 12. Publish to GitHub
 
 ```bash
 cd C:/Users/Motata/Downloads/navigateur-vs
 git init
-git add navigateur/main.cpp navigateur/newtab.html navigateur/app.rc navigateur/navigateur.vcxproj navigateur.sln installer.iss README.md
+git add src/main.cpp src/newtab.html src/app.rc src/NavPlusPlus.vcxproj NavPlusPlus.sln installer.iss README.md .gitignore
 git commit -m "Nav++ 1.0.0: tabs, themes, langs, installer"
 git branch -M main
 git remote add origin https://github.com/Motatadev/nav-plus-plus.git
@@ -278,7 +301,7 @@ git push -u origin main
 
 ---
 
-## 12. Roadmap ideas
+## 13. Roadmap ideas
 
 - Real multi-window, pinned tabs, sessions restore
 - Download manager UI (progress from `ICoreWebView2DownloadOperation`)
