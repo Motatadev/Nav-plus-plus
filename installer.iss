@@ -1,4 +1,4 @@
-; Nav++ - vrai installer Windows
+; Nav++ - real Windows installer
 #define MyAppName "Nav++"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "Nav++"
@@ -11,7 +11,7 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\Nav++
 DefaultGroupName={#MyAppName}
-OutputDir=C:\Users\Motata\Downloads\navigateur-vs\installer
+OutputDir=C:\Users\Motata\Downloads\nav-plus-plus\installer
 OutputBaseFilename=Nav++-Setup-1.0.0
 Compression=lzma
 SolidCompression=yes
@@ -22,8 +22,8 @@ ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayName={#MyAppName}
 VersionInfoVersion=1.0.0.0
 VersionInfoDescription=Nav++ installer
-SetupIconFile=C:\Users\Motata\Downloads\navigateur-vs\src\app.ico
-WizardSmallImageFile=C:\Users\Motata\Downloads\navigateur-vs\src\logo.png
+SetupIconFile=C:\Users\Motata\Downloads\nav-plus-plus\src\app.ico
+WizardSmallImageFile=C:\Users\Motata\Downloads\nav-plus-plus\src\logo.png
 
 [Languages]
 Name: "arabic"; MessagesFile: "compiler:Languages\\Arabic.isl"
@@ -61,9 +61,9 @@ Name: "ukrainian"; MessagesFile: "compiler:Languages\\Ukrainian.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "C:\Users\Motata\Downloads\navigateur-vs\x64\Release\Nav++.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Motata\Downloads\navigateur-vs\x64\Release\WebView2Loader.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Motata\Downloads\navigateur-vs\src\newtab.html"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Motata\Downloads\nav-plus-plus\x64\Release\Nav++.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Motata\Downloads\nav-plus-plus\x64\Release\WebView2Loader.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Motata\Downloads\nav-plus-plus\src\newtab.html"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -89,6 +89,6 @@ function InitializeSetup(): Boolean;
 begin
   Result := True;
   if not IsWebView2Installed() then
-    if MsgBox('WebView2 Runtime non detecte. Continuer quand meme ?', mbConfirmation, MB_YESNO) = IDNO then
+    if MsgBox('WebView2 Runtime not found. Continue anyway?', mbConfirmation, MB_YESNO) = IDNO then
       Result := False;
 end;

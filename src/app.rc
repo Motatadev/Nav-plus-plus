@@ -14,7 +14,7 @@ BEGIN
     BLOCK "040C04B0"
     BEGIN
       VALUE "CompanyName", "Nav++"
-      VALUE "FileDescription", "Nav++ - Navigateur web"
+      VALUE "FileDescription", "Nav++ - Web browser"
       VALUE "FileVersion", "1.0.0.0"
       VALUE "InternalName", "Nav++"
       VALUE "OriginalFilename", "Nav++.exe"

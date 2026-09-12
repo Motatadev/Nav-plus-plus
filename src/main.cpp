@@ -12,8 +12,8 @@
 using namespace Microsoft::WRL;
 
 HWND hUrlBar, hWebViewParent;
-ComPtr<ICoreWebView2> webview; // = onglet actif (alias)
-ComPtr<ICoreWebView2Controller> controller; // = onglet actif
+ComPtr<ICoreWebView2> webview; // = active tab (alias)
+ComPtr<ICoreWebView2Controller> controller; // = active tab
 ComPtr<ICoreWebView2Environment> g_env;
 HWND g_mainWnd = nullptr;
 WNDPROC g_oldEdit = nullptr;
@@ -40,7 +40,7 @@ LRESULT CALLBACK EditSubclass(HWND hEdit, UINT m, WPARAM wp, LPARAM lp) {
     return CallWindowProcW(g_oldEdit, hEdit, m, wp, lp);
 }
 
-// ===== Langue choisie a l'install (HKCU\Software\Nav++\Lang) =====
+// ===== Language picked at install (HKCU\Software\Nav++\Lang) =====
 std::wstring GetAppLang() {
     wchar_t v[64] = {};
     DWORD n = sizeof(v);
@@ -49,15 +49,15 @@ std::wstring GetAppLang() {
     n = sizeof(v); v[0] = 0;
     if (RegGetValueW(HKEY_LOCAL_MACHINE, L"Software\\Nav++", L"Lang", RRF_RT_REG_SZ, nullptr, v, &n) == ERROR_SUCCESS && v[0])
         return v;
-    return L"french";
+    return L"english";
 }
 std::wstring T(const std::wstring& key) {
-    // table 30 langues setup -> FR par defaut, EN fallback
+    // 30 setup languages table -> EN fallback
     static std::wstring lang;
     if (lang.empty()) lang = GetAppLang();
     struct E { const wchar_t* l; const wchar_t* k; const wchar_t* v; };
     static const E d[] = {
-        // placeholder barre d'adresse
+        // address bar placeholder
         {L"french",L"ph",L"Rechercher ou saisir une adresse"},{L"english",L"ph",L"Search or enter address"},
         {L"spanish",L"ph",L"Buscar o escribir una direccion"},{L"german",L"ph",L"Suchen oder Adresse eingeben"},
         {L"italian",L"ph",L"Cerca o inserisci un indirizzo"},{L"portuguese",L"ph",L"Pesquisar ou inserir endereco"},
@@ -66,7 +66,7 @@ std::wstring T(const std::wstring& key) {
         {L"polish",L"ph",L"Szukaj lub wpisz adres"},{L"turkish",L"ph",L"Ara veya adres gir"},
         {L"japanese",L"ph",L"Kensaku mataha adoresu wo nyuryoku"},{L"korean",L"ph",L"Geomsaek ttoneun juso iblyeok"},
         {L"ukrainian",L"ph",L"Poshuk abo vvedit adresu"},
-        // onglets
+        // tabs
         {L"french",L"new",L"Nouvel onglet"},{L"english",L"new",L"New tab"},
         {L"spanish",L"new",L"Nueva pestana"},{L"german",L"new",L"Neuer Tab"},
         {L"italian",L"new",L"Nuova scheda"},{L"portuguese",L"new",L"Novo separador"},
@@ -107,6 +107,18 @@ std::wstring T(const std::wstring& key) {
         {L"polish",L"acc",L"Konto"},{L"turkish",L"acc",L"Hesap"},
         {L"japanese",L"acc",L"Akaunto"},{L"korean",L"acc",L"Gyjeong"},
         {L"ukrainian",L"acc",L"Oblikovy zapys"},
+        // page buttons
+        {L"french",L"back",L"Retour"},{L"english",L"back",L"Back"},
+        {L"french",L"apply",L"Appliquer"},{L"english",L"apply",L"Apply"},
+        {L"french",L"reload",L"Recharger"},{L"english",L"reload",L"Reload"},
+        {L"french",L"open",L"Ouvrir"},{L"english",L"open",L"Open"},
+        {L"french",L"create",L"Creer"},{L"english",L"create",L"Create"},
+        {L"french",L"settings",L"Parametres"},{L"english",L"settings",L"Settings"},
+        {L"french",L"guest",L"Invite"},{L"english",L"guest",L"Guest"},
+        {L"french",L"current",L"actuel"},{L"english",L"current",L"current"},
+        {L"french",L"newpseudo",L"Nouveau pseudo..."},{L"english",L"newpseudo",L"New nickname..."},
+        {L"french",L"helpcss",L"Change les --bg --toolbar --text --accent --hover puis Appliquer. Clique un preset pour remplir."},{L"english",L"helpcss",L"Change the --bg --toolbar --text --accent --hover vars then Apply. Click a preset to fill."},
+        {L"french",L"menubody",L"Menu : Historique / Favoris / Telechargements dans %APPDATA%\\Nav++"},{L"english",L"menubody",L"Menu: History / Favorites / Downloads in %APPDATA%\\Nav++"},
     };
     for (auto &e : d) if (lang == e.l && key == e.k) return e.v;
     for (auto &e : d) if (std::wstring(L"english") == e.l && key == e.k) return e.v;
@@ -130,20 +142,20 @@ static COLORREF HexColor(const std::wstring& h, COLORREF fb) {
     return fb;
 }
 static std::wstring ThemeDefault() {
-    return L":root {\n  --bg: #202124;\n  --toolbar: #202124;\n  --text: #9AA0A6;\n  --accent: #8AB4F8;\n  --hover: #3C4043;\n}\n/* Mets tes regles pages ici. Change les --couleurs, Parametres > Recharger. */\n";
+    return L":root {\n  --bg: #202124;\n  --toolbar: #202124;\n  --text: #9AA0A6;\n  --accent: #8AB4F8;\n  --hover: #3C4043;\n}\n/* Put your page rules here. Change the --colors, Settings > Reload. */\n";
 }
 static std::wstring ThemePreset(const std::wstring& n) {
     if (n == L"gaming") return L":root {\n  --bg: #0E0E1B;\n  --toolbar: #12121F;\n  --text: #C8A0FF;\n  --accent: #A855F7;\n  --hover: #2D2A50;\n}\n";
     if (n == L"light") return L":root {\n  --bg: #FFFFFF;\n  --toolbar: #F1F3F4;\n  --text: #5F6368;\n  --accent: #1A73E8;\n  --hover: #E8EAED;\n}\n";
     if (n == L"blue") return L":root {\n  --bg: #0B1E3A;\n  --toolbar: #10294F;\n  --text: #8AB4F8;\n  --accent: #4285F4;\n  --hover: #1A3A5F;\n}\n";
-    return ThemeDefault(); // chrome
+    return ThemeDefault(); // chrome default
 }
 static void Theme_Load() {
     std::wstring p = ThemePath();
     std::wifstream f(p);
     if (!f) { WriteUtf8File(p, ThemeDefault()); }
     std::wstring css, l;
-    // lit en utf8->wide approx (ascii suffit pour couleurs)
+    // read as utf8->wide approx (ascii is enough for colors)
     char buf[4096]; std::string all;
     std::ifstream bf(ToUtf8(p), std::ios::binary);
     if (bf) { all.assign((std::istreambuf_iterator<char>(bf)), std::istreambuf_iterator<char>()); }
@@ -174,7 +186,7 @@ static std::wstring ThemeCssText() {
     return std::wstring(s.begin(), s.end());
 }
 
-// ===== Backend sans UI (dossier data, pas de changement visuel) =====
+// ===== Headless backend (data folder, no visual change) =====
 void Log(const std::wstring& msg);
 std::wstring GetDataDir() {
     wchar_t path[MAX_PATH] = {};
@@ -195,10 +207,10 @@ std::string ToUtf8(const std::wstring& w) {
 }
 void History_Add(const std::wstring& url, const std::wstring& title) {
     if (url.empty() || url.find(L"about:") == 0) return;
-    if (url.find(L"file:///") == 0) return; // pas de ? interne dans historique
+    if (url.find(L"file:///") == 0) return; // no internal ? in history
     if (url.find(L"file:///profile") == 0) return;
     std::wstring dir = GetDataDir();
-    // append + timestamp, pas de doublon consecutif
+    // append + timestamp
     std::wofstream f(dir + L"\\history.txt", std::ios::app);
     if (!f) return;
     std::time_t t = std::time(nullptr);
@@ -206,11 +218,11 @@ void History_Add(const std::wstring& url, const std::wstring& title) {
 }
 void Favorites_Add(const std::wstring& url, const std::wstring& title) {
     if (url.empty()) return;
-    if (url.find(L"file:///") == 0) return; // pas de page interne en fav
+    if (url.find(L"file:///") == 0) return; // no internal pages in favorites
     std::wstring dir = GetDataDir();
     std::wofstream f(dir + L"\\favorites.txt", std::ios::app);
     if (f) f << url << L"|" << title << L"\n";
-    Log(L"Favori ajoute: " + url);
+    Log(L"Favorite added: " + url);
 }
 std::vector<std::wstring> Favorites_List() {
     std::vector<std::wstring> out;
@@ -233,7 +245,7 @@ void Profile_SetUser(const std::wstring& user) {
     std::wstring dir = GetDataDir();
     std::wofstream f(dir + L"\\profile.txt");
     if (f) f << user;
-    // ajoute a la liste des comptes si nouveau
+    // add to the account list if new
     std::wifstream in(dir + L"\\accounts.txt");
     std::wstring l; bool found = false;
     while (std::getline(in, l)) if (l == user) found = true;
@@ -242,7 +254,7 @@ void Profile_SetUser(const std::wstring& user) {
         std::wofstream out(dir + L"\\accounts.txt", std::ios::app);
         if (out) out << user << L"\n";
     }
-    Log(L"Compte local: " + user);
+    Log(L"Local account: " + user);
 }
 std::vector<std::wstring> Accounts_List() {
     std::vector<std::wstring> out;
@@ -262,7 +274,7 @@ std::wstring EscapeHtml(const std::wstring& s) {
     }
     return o;
 }
-// vrais onglets internes gaming (pas de .txt externe)
+// real internal tabs (no external .txt)
 void ShowInternalPage(const std::wstring& kind);
 void NavigateTo(const std::wstring& url);
 
@@ -290,12 +302,12 @@ void NavigateTo(const std::wstring& url) {
     std::wstring finalUrl = url;
     if (finalUrl.find(L"://") == std::wstring::npos)
         finalUrl = L"https://" + finalUrl;
-    Log(L"Navigate vers: " + finalUrl);
+    Log(L"Navigate to: " + finalUrl);
     webview->Navigate(finalUrl.c_str());
 }
 
 void ResizeWebView(HWND hWnd) {
-    // resize tous les controleurs (onglets caches gardent les bounds)
+    // resize every controller (hidden tabs keep their bounds)
     RECT bounds;
     GetClientRect(hWnd, &bounds);
     bounds.left = 62;
@@ -321,12 +333,12 @@ void Tab_Create(HWND hWnd, const std::wstring& url) {
                 t.ctl = c;
                 c->put_IsVisible(FALSE);
                 c->get_CoreWebView2(&t.wv);
-                // masque file interne du log ici, events attaches
+                // store the tab, attach events below
                 g_tabs.push_back(t);
                 int idx = (int)g_tabs.size() - 1;
                 g_tabs[idx].title = T(L"new");
                 Tab_SetupEvents(hWnd, t.wv);
-                // bounds
+                // place below the toolbar
                 RECT b; GetClientRect(hWnd, &b);
                 b.left = 62; b.top = 88;
                 c->put_Bounds(b);
@@ -351,7 +363,7 @@ void Tab_Switch(HWND hWnd, int i) {
         ResizeWebView(hWnd);
         controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
     }
-    // url bar + titre
+    // address bar + title
     if (webview) {
         LPWSTR u = nullptr;
         if (SUCCEEDED(webview->get_Source(&u)) && u) {
@@ -374,7 +386,7 @@ void Tab_Close(HWND hWnd, int i) {
 }
 void Tab_Refresh(HWND hWnd) {
     RECT rc; GetClientRect(hWnd, &rc);
-    int maxX = rc.right - 140; // reserve boutons Windows - carre X
+    int maxX = rc.right - 140; // room for the Windows buttons on the right
     for (int i = 0; i < 8; i++) {
         bool show = i < (int)g_tabs.size();
         if (hTabBtns[i]) ShowWindow(hTabBtns[i], show ? SW_SHOW : SW_HIDE);
@@ -407,7 +419,7 @@ std::wstring GetNewTabUrl() {
     if (p != std::wstring::npos) d = d.substr(0, p + 1);
     std::wstring f = d + L"newtab.html";
     if (GetFileAttributesW(f.c_str()) == INVALID_FILE_ATTRIBUTES)
-        f = L"C:\\Users\\Motata\\Downloads\\navigateur-vs\\src\\newtab.html"; // dev fallback
+        f = L"C:\\Users\\Motata\\Downloads\\nav-plus-plus\\src\\newtab.html"; // dev fallback
     for (auto &c : f) if (c == L'\\') c = L'/';
     std::wstring lang = GetAppLang();
     std::wstring th = ThemePath();
@@ -446,7 +458,7 @@ void ShowInternalPage(const std::wstring& kind) {
     // custom.css utilisateur injecte (themes)
     html += L"<style>" + ThemeCssText() + L"</style></head><body>";
     if (kind == L"history") {
-        html += L"<h1>" + T(L"hist") + L"</h1><div class='bar'><button onclick='history.back()'>Retour</button></div>";
+        html += L"<h1>" + T(L"hist") + L"</h1><div class='bar'><button onclick='history.back()'>" + T(L"back") + L"</button></div>";
         std::wifstream f(dir + L"\\history.txt");
         std::vector<std::wstring> lines; std::wstring l;
         while (std::getline(f, l)) if (!l.empty()) lines.push_back(l);
@@ -457,53 +469,52 @@ void ShowInternalPage(const std::wstring& kind) {
             html += L"<a href='" + EscapeHtml(url) + L"'>" + EscapeHtml(url) + L"</a>";
         }
     } else if (kind == L"favorites") {
-        html += L"<h1>" + T(L"fav") + L"</h1><div class='bar'><button onclick='history.back()'>Retour</button></div>";
+        html += L"<h1>" + T(L"fav") + L"</h1><div class='bar'><button onclick='history.back()'>" + T(L"back") + L"</button></div>";
         for (auto &e : Favorites_List()) {
             auto p = e.find(L'|'); std::wstring url = p != std::wstring::npos ? e.substr(0, p) : e;
             html += L"<a href='" + EscapeHtml(url) + L"'>" + EscapeHtml(url) + L"</a>";
         }
     } else if (kind == L"downloads") {
         html += L"<h1>" + T(L"dl") + L"</h1>"
-          L"<div class='bar'><button onclick='history.back()'>Retour</button></div>";
+          L"<div class='bar'><button onclick='history.back()'>" + T(L"back") + L"</button></div>";
     } else if (kind == L"profile") {
         std::wstring cur = Profile_GetUser();
-        if (cur.empty()) cur = L"Invite";
+        if (cur.empty()) cur = T(L"guest");
         html += L"<h1>" + T(L"acc") + L" : " + EscapeHtml(cur) + L"</h1>"
-          L"<div class='bar'><button onclick='history.back()'>Retour</button></div>";
+          L"<div class='bar'><button onclick='history.back()'>" + T(L"back") + L"</button></div>";
         for (auto &a : Accounts_List()) {
             html += L"<a href='file:///profile?action=switch&user=" + EscapeHtml(a) + L"'>" + EscapeHtml(a);
-            if (a == Profile_GetUser()) html += L" (actuel)";
+            if (a == Profile_GetUser()) html += L" (" + T(L"current") + L")";
             html += L"</a>";
         }
-        html += L"<div class='bar' style='margin-top:16px'><input id='nu' placeholder='Nouveau pseudo...' style='background:#303134;color:#fff;border:1px solid #5f6368;border-radius:8px;padding:8px 12px'>"
-          L"<button onclick=\"location.href='file:///profile?action=create&user='+encodeURIComponent(document.getElementById('nu').value)\">+ Creer</button></div>";
+        html += L"<div class='bar' style='margin-top:16px'><input id='nu' placeholder='" + T(L"newpseudo") + L"' style='background:#303134;color:#fff;border:1px solid #5f6368;border-radius:8px;padding:8px 12px'>"
+          L"<button onclick=\"location.href='file:///profile?action=create&user='+encodeURIComponent(document.getElementById('nu').value)\">+ " + T(L"create") + L"</button></div>";
     } else if (kind == L"settings") {
-        html += L"<h1>Parametres - Themes</h1><div class='bar'><button onclick='history.back()'>Retour</button>"
-          L"<button onclick=\"location.href='file:///settings?action=reload'\">Recharger</button>"
-          L"<button onclick=\"location.href='file:///settings?action=open'\">Ouvrir custom.css</button></div>";
+        html += L"<h1>" + T(L"settings") + L" - Themes</h1><div class='bar'><button onclick='history.back()'>" + T(L"back") + L"</button>"
+          L"<button onclick=\"location.href='file:///settings?action=reload'\">" + T(L"reload") + L"</button>"
+          L"<button onclick=\"location.href='file:///settings?action=open'\">" + T(L"open") + L" custom.css</button></div>";
         html += L"<div class='bar'>"
           L"<button onclick=\"location.href='file:///settings?action=preset&name=chrome'\">Chrome</button>"
           L"<button onclick=\"location.href='file:///settings?action=preset&name=gaming'\">Gaming</button>"
-          L"<button onclick=\"location.href='file:///settings?action=preset&name=light'\">Clair</button>"
-          L"<button onclick=\"location.href='file:///settings?action=preset&name=blue'\">Bleu</button></div>";
-        // editeur : contenu actuel
+          L"<button onclick=\"location.href='file:///settings?action=preset&name=light'\">Light</button>"
+          L"<button onclick=\"location.href='file:///settings?action=preset&name=blue'\">Blue</button></div>";
+        // editor: current file content
         std::ifstream cf(ToUtf8(ThemePath()), std::ios::binary);
         std::string cur((std::istreambuf_iterator<char>(cf)), std::istreambuf_iterator<char>());
         std::wstring wcur(cur.begin(), cur.end());
-        // echappe </textarea>
         html += L"<textarea id='css' style='width:100%;height:220px;background:#303134;color:#e8eaed;border:1px solid #5f6368;border-radius:8px;padding:12px;font-family:Consolas,monospace'>" + EscapeHtml(wcur) + L"</textarea>";
-        html += L"<div class='bar' style='margin-top:10px'><button onclick=\"location.href='file:///settings?action=save&css='+encodeURIComponent(document.getElementById('css').value)\">Appliquer</button></div>"
-          L"<p style='color:#9aa0a6'>Change les --bg --toolbar --text --accent --hover puis Appliquer. Clique un preset pour remplir.</p>";
+        html += L"<div class='bar' style='margin-top:10px'><button onclick=\"location.href='file:///settings?action=save&css='+encodeURIComponent(document.getElementById('css').value)\">" + T(L"apply") + L"</button></div>"
+          L"<p style='color:#9aa0a6'>" + T(L"helpcss") + L"</p>";
     }
     html += L"</body></html>";
     WriteUtf8File(file, html);
     std::wstring url = file;
     for (auto &c : url) if (c == L'\\') c = L'/';
     NavigateTo(L"file:///" + url);
-    Log(L"Onglet interne: " + kind);
+    Log(L"Internal tab: " + kind);
 }
 
-// ===== Boutons gaming style maquette : vraies icones Segoe MDL2 + hover anim =====
+// ===== Chrome-style buttons: real Segoe MDL2 icons + hover =====
 static int g_hoverId = 0;
 HWND GamingBtn(HWND parent, const wchar_t* txt, int x, int y, int w, int h, int id) {
     HWND b = CreateWindowW(L"BUTTON", txt, WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
@@ -513,18 +524,18 @@ HWND GamingBtn(HWND parent, const wchar_t* txt, int x, int y, int w, int h, int 
 }
 const wchar_t* MdlIcon(int id) {
     if (id >= 100 && id < 108) return L"";
-    if (id >= 200 && id < 208) return L"\uE8BB"; // x close onglet
+    if (id >= 200 && id < 208) return L"\uE8BB"; // tab close x
     switch (id) {
     case 1: return L"\uE72B";  // back
     case 5: return L"\uE72A";  // forward
     case 2: return L"\uE72C";  // refresh
     case 6: return L"\uE734";  // star
-    case 7: return L"\uE77B";  // contact/profil
+    case 7: return L"\uE77B";  // contact/profile
     case 8: return L"\uE712";  // more ...
-    case 4: return L"\uE71A";  // go fleche (pas de +)
+    case 4: return L"\uE71A";  // go arrow
     case 10: return L"\uE710"; // + tab
-    case 11: return L"\uE8BB"; // close tab x icone
-    case 20: return L"\uE10F"; // home / newtab (100% MDL2, fini emoji ?)
+    case 11: return L"\uE8BB"; // tab close x icon
+    case 20: return L"\uE10F"; // home / new tab (MDL2 only)
     case 21: return L"\uE81C"; // history
     case 22: return L"\uE734"; // fav star
     case 23: return L"\uE896"; // download
@@ -541,9 +552,9 @@ void DrawGamingBtn(LPDRAWITEMSTRUCT d) {
     if (istab) active = (g_active >= 0 && d->CtlID == 100 + g_active);
     bool pressed = (d->itemState & ODS_SELECTED);
     bool hover = (g_hoverId == (int)d->CtlID);
-    // style theme custom.css (defaut Chrome gris)
+    // custom.css theme (default Chrome gray)
     COLORREF parent = sidebar ? g_theme.bg : istop ? g_theme.bg : istab ? (active ? RGB(53, 54, 58) : g_theme.bg) : g_theme.bg;
-    // onglet actif = toolbar un peu plus clair, lisible sur tous themes
+    // active tab = slightly lighter toolbar, readable on every theme
     if (istab && active) parent = g_theme.toolbar == g_theme.bg ? RGB(53,54,58) : g_theme.toolbar;
     COLORREF bg = parent;
     if (pressed) bg = g_theme.hover;
@@ -552,7 +563,7 @@ void DrawGamingBtn(LPDRAWITEMSTRUCT d) {
     FillRect(d->hDC, &d->rcItem, b);
     DeleteObject(b);
     if (d->CtlID >= 30 && d->CtlID <= 32) {
-        // boutons Windows style Chrome : - carre X, fond rouge que pour X hover
+        // Windows buttons, Chrome style: red background only for X on hover
         if (d->CtlID == 30 && hover) {
             HBRUSH r = CreateSolidBrush(RGB(232, 17, 35));
             FillRect(d->hDC, &d->rcItem, r);
@@ -569,10 +580,10 @@ void DrawGamingBtn(LPDRAWITEMSTRUCT d) {
         DeleteObject(f);
         return;
     }
-    // style theme : gris, hover blanc, actif accent
+    // theme style: gray icons, white on hover, accent when active
     bool isActiveTab = (istab && active) || (isX && (d->CtlID - 200 == g_active));
     if (isX) {
-        // fond = fond de son onglet
+        // background = its own tab background
         HBRUSH bx = CreateSolidBrush((d->CtlID - 200 == g_active) ? (hover ? RGB(65,66,71) : RGB(53,54,58)) : (hover ? RGB(60,60,65) : RGB(32,33,36)));
         FillRect(d->hDC, &d->rcItem, bx);
         DeleteObject(bx);
@@ -582,7 +593,7 @@ void DrawGamingBtn(LPDRAWITEMSTRUCT d) {
     if (isActiveTab) tc = RGB(255, 255, 255);
     if (sidebar && active && !hover) tc = g_theme.accent;
     SetTextColor(d->hDC, tc);
-    // onglets 100+ : vrai titre texte style Chrome (pas d'icone)
+    // tabs 100+: real text title, Chrome style (no icon)
     if (d->CtlID >= 100 && d->CtlID < 108) {
         HFONT f = CreateFontW(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 0, L"Segoe UI");
@@ -597,7 +608,7 @@ void DrawGamingBtn(LPDRAWITEMSTRUCT d) {
         DeleteObject(f);
         return;
     }
-    // 100% MDL2, zero emoji
+    // MDL2 only, zero emoji
     const wchar_t* txt = MdlIcon(d->CtlID);
     const wchar_t* font = L"Segoe MDL2 Assets";
     int fs = sidebar ? 20 : 16;
@@ -609,7 +620,7 @@ void DrawGamingBtn(LPDRAWITEMSTRUCT d) {
     DeleteObject(f);
 }
 void Tab_SetupEvents(HWND hWnd, ComPtr<ICoreWebView2> wv) {
-    // capture wv brut pour retrouver l'onglet (multi-onglets)
+    // capture the raw wv to find its tab back (multi-tab)
     ICoreWebView2* raw = wv.Get();
     wv->add_SourceChanged(Callback<ICoreWebView2SourceChangedEventHandler>(
         [hWnd, raw](ICoreWebView2*, IUnknown*) -> HRESULT {
@@ -626,7 +637,7 @@ void Tab_SetupEvents(HWND hWnd, ComPtr<ICoreWebView2> wv) {
                 else if (url.find(L"favorites.html") != std::wstring::npos) { friendly = T(L"fav"); title = T(L"fav"); }
                 else if (url.find(L"downloads.html") != std::wstring::npos) { friendly = T(L"dl"); title = T(L"dl"); }
                 else if (url.find(L"profile.html") != std::wstring::npos || url.find(L"file:///profile") == 0) { friendly = T(L"acc"); title = T(L"acc"); }
-                else if (url.find(L"settings.html") != std::wstring::npos || url.find(L"file:///settings") == 0) { friendly = L"Parametres"; title = L"Parametres"; }
+                else if (url.find(L"settings.html") != std::wstring::npos || url.find(L"file:///settings") == 0) { friendly = T(L"settings"); title = T(L"settings"); }
                 else {
                     friendly = url;
                     auto p = url.find(L"://");
@@ -634,7 +645,7 @@ void Tab_SetupEvents(HWND hWnd, ComPtr<ICoreWebView2> wv) {
                     auto s = dom.find(L'/'); if (s != std::wstring::npos) dom = dom.substr(0, s);
                     auto q = dom.find(L'?'); if (q != std::wstring::npos) dom = dom.substr(0, q);
                     if (dom.size() > 18) dom = dom.substr(0, 18);
-                    title = dom.empty() ? L"Nouvel onglet" : dom;
+                    title = dom.empty() ? T(L"new") : dom;
                 }
                 g_tabs[idx].title = title;
                 if (idx == g_active) {
@@ -652,7 +663,7 @@ void Tab_SetupEvents(HWND hWnd, ComPtr<ICoreWebView2> wv) {
     wv->add_NavigationCompleted(Callback<ICoreWebView2NavigationCompletedEventHandler>(
         [](ICoreWebView2*, ICoreWebView2NavigationCompletedEventArgs* a) -> HRESULT {
             BOOL ok = FALSE; if (a) a->get_IsSuccess(&ok);
-            Log(ok ? L"Navigation OK" : L"Navigation ECHEC");
+                                                Log(ok ? L"Navigation OK" : L"Navigation FAILED");
             return S_OK;
         }).Get(), nullptr);
     wv->add_NavigationStarting(Callback<ICoreWebView2NavigationStartingEventHandler>(
@@ -683,7 +694,7 @@ void Tab_SetupEvents(HWND hWnd, ComPtr<ICoreWebView2> wv) {
                         auto q = u.find(L"css=");
                         if (q != std::wstring::npos) {
                             std::wstring css = urldec(u.substr(q + 4));
-                            // urldec donne utf16 approx, ecrit tel quel
+                            // urldec gives utf16 approx, written as-is
                             WriteUtf8File(ThemePath(), css);
                         }
                         Theme_Load();
@@ -717,13 +728,13 @@ void Tab_SetupEvents(HWND hWnd, ComPtr<ICoreWebView2> wv) {
                     wchar_t* up = _wgetenv(L"USERPROFILE");
                     std::wstring folder = up ? std::wstring(up) + L"\\Downloads" : GetDataDir();
                     CreateDirectoryW(folder.c_str(), nullptr);
-                    Log(L"Download demarre vers: " + folder);
+                                                            Log(L"Download started to: " + folder);
                     op->add_StateChanged(Callback<ICoreWebView2StateChangedEventHandler>(
                         [](ICoreWebView2DownloadOperation* o, IUnknown*) -> HRESULT {
                             COREWEBVIEW2_DOWNLOAD_STATE st;
                             if (SUCCEEDED(o->get_State(&st))) {
-                                if (st == COREWEBVIEW2_DOWNLOAD_STATE_COMPLETED) Log(L"Download termine");
-                                if (st == COREWEBVIEW2_DOWNLOAD_STATE_INTERRUPTED) Log(L"Download interrompu");
+                                                                            if (st == COREWEBVIEW2_DOWNLOAD_STATE_COMPLETED) Log(L"Download finished");
+                                                                            if (st == COREWEBVIEW2_DOWNLOAD_STATE_INTERRUPTED) Log(L"Download interrupted");
                             }
                             return S_OK;
                         }).Get(), nullptr);
@@ -747,10 +758,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         POINT p = {LOWORD(lParam), HIWORD(lParam)};
         ScreenToClient(hWnd, &p);
         RECT rc; GetClientRect(hWnd, &rc);
-        // 1) ne jamais voler les clics des boutons/onglets
+        // 1) never steal button/tab clicks
         HWND child = ChildWindowFromPoint(hWnd, p);
         if (child && child != hWnd) return HTCLIENT;
-        // 2) resize bords
+        // 2) edge resize
         if (p.y >= rc.bottom - 8 && p.x >= rc.right - 8) return HTBOTTOMRIGHT;
         if (p.y >= rc.bottom - 8 && p.x <= 8) return HTBOTTOMLEFT;
         if (p.y <= 8 && p.x >= rc.right - 8) return HTTOPRIGHT;
@@ -758,7 +769,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (p.y >= rc.bottom - 5) return HTBOTTOM;
         if (p.x <= 5) return HTLEFT;
         if (p.x >= rc.right - 5) return HTRIGHT;
-        // 3) drag barre onglets vide (fini le bug deplacage)
+        // 3) drag the empty tab bar
         if (p.y < 36) return HTCAPTION;
         break;
     }
@@ -787,11 +798,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         hBtnProfile = GamingBtn(hWnd, L"", 835, 44, 36, 34, 7);
         hBtnMenu = GamingBtn(hWnd, L"", 875, 44, 30, 34, 8);
         hBtnGo = GamingBtn(hWnd, L"", 910, 44, 40, 34, 4);
-        // Windows style Chrome : - carre X a droite, fini pastilles vertes macOS
+        // Windows buttons, Chrome style: - square X on the right
         hMin = GamingBtn(hWnd, L"", 1100, 0, 45, 32, 31);
         hMax = GamingBtn(hWnd, L"", 1145, 0, 45, 32, 32);
         hClose = GamingBtn(hWnd, L"", 1190, 0, 45, 32, 30);
-        // multi-onglets Chrome : 8 max, titre texte, x icone
+        // Chrome multi-tabs: 8 max, text title, x icon
         for (int i = 0; i < 8; i++) {
             hTabBtns[i] = GamingBtn(hWnd, L"", 70 + i * 170, 4, 145, 28, 100 + i);
             hTabX[i] = GamingBtn(hWnd, L"", 70 + i * 170 + 145, 4, 25, 28, 200 + i);
@@ -805,13 +816,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         ShowWindow(hTab, SW_HIDE); ShowWindow(hTabClose, SW_HIDE);
         hTabPlus = GamingBtn(hWnd, L"", 70, 4, 30, 28, 10);
         g_tabPlus = hTabPlus;
-        // sidebar
+        // left sidebar
         hSideGame = GamingBtn(hWnd, L"", 8, 100, 46, 46, 20);
         hSideHist = GamingBtn(hWnd, L"", 8, 152, 46, 46, 21);
         hSideFav = GamingBtn(hWnd, L"", 8, 204, 46, 46, 22);
         hSideDl = GamingBtn(hWnd, L"", 8, 256, 46, 46, 23);
         hSideSet = GamingBtn(hWnd, L"", 8, 308, 46, 46, 24);
-        // police Chrome clean
+        // clean Chrome font
         HFONT hUi = CreateFontW(15, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 0, L"Segoe UI");
         SendMessageW(hUrlBar, WM_SETFONT, (WPARAM)hUi, TRUE);
@@ -820,10 +831,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         hWebViewParent = hWnd;
         g_mainWnd = hWnd;
 
-        // Entree dans la barre d'adresse = Go
+        // Enter in the address bar = Go
         g_oldEdit = (WNDPROC)SetWindowLongPtrW(hUrlBar, GWLP_WNDPROC, (LONG_PTR)EditSubclass);
 
-        // userData inscriptible meme installe en Program Files (fini bug post-install)
+        // writable userData even when installed under Program Files
         std::wstring ud = GetDataDir() + L"\\WebViewData";
         CreateDirectoryW(ud.c_str(), nullptr);
         static std::wstring udKeep = ud;
@@ -834,10 +845,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         wchar_t b[256];
                         swprintf_s(b, L"CreateEnvironment FAILED hr=0x%08X", (unsigned)result);
                         Log(b);
-                        MessageBoxW(hWnd, b, L"WebView2 manquant", MB_ICONERROR);
+                        MessageBoxW(hWnd, b, L"WebView2 missing", MB_ICONERROR);
                         return S_OK;
                     }
-                    Log(L"Environment OK, multi-onglets...");
+                    Log(L"Environment OK, multi-tabs...");
                     g_env = env;
                     Tab_Create(hWnd, GetNewTabUrl());
                     return S_OK;
@@ -911,13 +922,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         break;
     }
     case WM_COMMAND:
-        if (LOWORD(wParam) == 4) { // Go / Entree
+        if (LOWORD(wParam) == 4) { // Go / Enter
             wchar_t buf[2048] = {};
             GetWindowTextW(hUrlBar, buf, 2048);
             std::wstring s = buf;
-            // si pas d'URL mais recherche -> DuckDuckGo
+            // text without URL shape = search -> DuckDuckGo
             if (s.find(L"://") == std::wstring::npos && s.find(L".") == std::wstring::npos
-                && s.find(L"file:") != 0 && s.find(L"Rechercher") == std::wstring::npos) {
+                && s.find(L"file:") != 0 && s != T(L"ph")) {
                 s = L"https://duckduckgo.com/?q=" + s;
                 NavigateTo(s);
             } else {
@@ -927,7 +938,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (LOWORD(wParam) == 1 && webview) webview->GoBack();
         if (LOWORD(wParam) == 5 && webview) webview->GoForward();
         if (LOWORD(wParam) == 2 && webview) webview->Reload();
-        if (LOWORD(wParam) == 6) { // star : ajoute
+        if (LOWORD(wParam) == 6) { // star: save page, open favorites
             wchar_t buf[2048] = {};
             GetWindowTextW(hUrlBar, buf, 2048);
             std::wstring s = buf;
@@ -941,15 +952,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             ShowInternalPage(L"profile");
         }
         if (LOWORD(wParam) == 8) {
-            MessageBoxW(hWnd, L"Menu : Historique / Favoris / Downloads dans %APPDATA%\\Nav++", L"Menu", MB_ICONINFORMATION);
+            MessageBoxW(hWnd, T(L"menubody").c_str(), L"Menu", MB_ICONINFORMATION);
         }
-        if (LOWORD(wParam) == 10 || LOWORD(wParam) == 20) { // + / home : nouvel onglet
+        if (LOWORD(wParam) == 10 || LOWORD(wParam) == 20) { // + / home: new tab
             Tab_Create(hWnd, GetNewTabUrl());
         }
         if (LOWORD(wParam) == 11) {
             Tab_Close(hWnd, g_active);
         }
-        // select onglet 100-107, close 200-207
+        // tab select 100-107, tab close 200-207
         if (LOWORD(wParam) >= 100 && LOWORD(wParam) < 108) {
             Tab_Switch(hWnd, LOWORD(wParam) - 100);
         }

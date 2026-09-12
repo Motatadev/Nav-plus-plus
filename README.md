@@ -47,7 +47,7 @@ Get-ChildItem "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MS
 ## 3. Project structure
 
 ```
-navigateur-vs/
+nav-plus-plus/
   NavPlusPlus.sln
   installer.iss                 # Inno Setup script (30 langs, registry, shortcuts)
   README.md                     # this tutorial
@@ -80,7 +80,7 @@ Runtime data (per user, auto-created):
 ### 4.1 Restore WebView2 (first time)
 
 ```powershell
-C:\Users\Motata\AppData\Local\Temp\opencode\nuget.exe restore "C:\Users\Motata\Downloads\navigateur-vs\NavPlusPlus.sln"
+C:\Users\Motata\AppData\Local\Temp\opencode\nuget.exe restore "C:\Users\Motata\Downloads\nav-plus-plus\NavPlusPlus.sln"
 ```
 
 Or: open `NavPlusPlus.sln` in Visual Studio → right-click solution → Restore NuGet.
@@ -95,7 +95,7 @@ Or: open `NavPlusPlus.sln` in Visual Studio → right-click solution → Restore
 
 ```powershell
 & "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" `
-  "C:\Users\Motata\Downloads\navigateur-vs\NavPlusPlus.sln" `
+  "C:\Users\Motata\Downloads\nav-plus-plus\NavPlusPlus.sln" `
   /p:Configuration=Release /p:Platform=x64 /verbosity:minimal
 ```
 
@@ -104,7 +104,7 @@ Output: `x64\Release\Nav++.exe` (+ `WebView2Loader.dll` auto-copied by the NuGet
 ### 4.4 Run
 
 ```powershell
-Start-Process "C:\Users\Motata\Downloads\navigateur-vs\x64\Release\Nav++.exe"
+Start-Process "C:\Users\Motata\Downloads\nav-plus-plus\x64\Release\Nav++.exe"
 ```
 
 Close all copies before rebuilding, else `LNK1168`:
@@ -123,7 +123,7 @@ WebView2 check, 30-language selector, `HKLM/HKCU\Software\Nav++\Lang`.
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" `
-  "C:\Users\Motata\Downloads\navigateur-vs\installer.iss"
+  "C:\Users\Motata\Downloads\nav-plus-plus\installer.iss"
 # → installer\Nav++-Setup-1.0.0.exe
 ```
 
@@ -140,12 +140,12 @@ For quick retests, build the portable zip (never committed, see `.gitignore`):
 ```powershell
 # 1. Build Release (§4), then pack:
 New-Item -ItemType Directory -Path "$env:TEMP\Nav++-Portable" -Force
-Copy-Item "C:\Users\Motata\Downloads\navigateur-vs\x64\Release\Nav++.exe",
-  "C:\Users\Motata\Downloads\navigateur-vs\x64\Release\WebView2Loader.dll",
-  "C:\Users\Motata\Downloads\navigateur-vs\src\newtab.html" `
+Copy-Item "C:\Users\Motata\Downloads\nav-plus-plus\x64\Release\Nav++.exe",
+  "C:\Users\Motata\Downloads\nav-plus-plus\x64\Release\WebView2Loader.dll",
+  "C:\Users\Motata\Downloads\nav-plus-plus\src\newtab.html" `
   -Destination "$env:TEMP\Nav++-Portable\" -Force
 Compress-Archive -Path "$env:TEMP\Nav++-Portable\*" `
-  -DestinationPath "C:\Users\Motata\Downloads\navigateur-vs\installer\Nav++-Portable-1.0.0.zip" -Force
+  -DestinationPath "C:\Users\Motata\Downloads\nav-plus-plus\installer\Nav++-Portable-1.0.0.zip" -Force
 ```
 
 Unzip anywhere, keep the files together, double-click `Nav++.exe`.
@@ -274,7 +274,7 @@ re-renders (`ShowInternalPage`). Same pattern for
 - Binary: `src/NavPlusPlus.vcxproj` → `<TargetName>Nav++</TargetName>`.
 - Window: `wWinMain` class `NavPlusPlus`, title `Nav++`.
 - Data dir: `GetDataDir()` (`%APPDATA%\Nav++`).
-- Icon: save logo as `navigateur\logo.png`, then
+- Icon: save logo as `src\logo.png`, then
 
 ```powershell
 & "$env:ProgramFiles\ImageMagick-7.1.2-Q16-HDRI\magick.exe" logo.png -define icon:auto-resize=16,24,32,48,64,128,256 app.ico
@@ -287,7 +287,7 @@ re-renders (`ShowInternalPage`). Same pattern for
 ## 12. Publish to GitHub
 
 ```bash
-cd C:/Users/Motata/Downloads/navigateur-vs
+cd C:/Users/Motata/Downloads/nav-plus-plus
 git init
 git add src/main.cpp src/newtab.html src/app.rc src/NavPlusPlus.vcxproj NavPlusPlus.sln installer.iss README.md .gitignore
 git commit -m "Nav++ 1.0.0: tabs, themes, langs, installer"
