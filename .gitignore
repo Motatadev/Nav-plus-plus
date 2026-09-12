@@ -1,0 +1,20 @@
+# Build outputs
+x64/
+installer/*.exe
+*.ilk
+*.pdb
+*.tlog
+*.recipe
+*.idb
+
+# NuGet / deps
+packages/
+.vs/
+
+# Logs & local data
+*.log
+debug.log
+
+# OS
+Thumbs.db
+Desktop.ini

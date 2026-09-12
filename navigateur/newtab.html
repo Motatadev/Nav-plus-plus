@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nouvel onglet</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{height:100vh;background:#202124;color:#e8eaed;display:flex;flex-direction:column;align-items:center;padding-top:10vh}
+.logo{width:72px;height:72px;border-radius:50%;background:#303134;display:flex;align-items:center;justify-content:center;animation:pop .5s ease}
+.logo svg{width:38px;height:38px;fill:#8ab4f8}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.search{margin-top:26px;width:min(560px,82vw);display:flex;align-items:center;background:#303134;border-radius:24px;padding:12px 18px;transition:.15s;border:1px solid transparent}
+.search:focus-within{background:#3a3b40;border-color:#5f6368}
+.search svg{width:18px;height:18px;fill:#9aa0a6;flex-shrink:0}
+.search input{flex:1;background:none;border:none;outline:none;color:#e8eaed;font-size:15px;margin-left:12px}
+.grid{margin-top:30px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;max-width:640px}
+.card{width:88px;padding:14px 6px;background:transparent;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;text-decoration:none;color:#9aa0a6;font-size:12px;transition:background .15s}
+.card:hover{background:#303134;color:#e8eaed}
+.icon{width:48px;height:48px;border-radius:50%;background:#303134;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.icon img{width:26px;height:26px}
+.card:hover .icon{background:#3a3b40}
+</style>
+</head>
+<body>
+<div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm5.2 6.2-2.2 2.2a3.7 3.7 0 0 0-6 0L6.8 8.2a7.2 7.2 0 0 1 10.4 0zM6.5 15.5l1.5-4.5 1.5 4.5H12l-1 3h-2l-2.5-3zm11 0c0-.8-.7-1.5-1.5-1.5s-1.5.7-1.5 1.5.7 1.5 1.5 1.5 1.5-.7 1.5-1.5z"/></svg></div>
+<div class="search"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5zm-6 0a4.5 4.5 0 1 1 4.5-4.5 4.5 4.5 0 0 1-4.5 4.5z"/></svg><input id="q" placeholder="Rechercher avec DuckDuckGo" onkeydown="if(event.key==='Enter')go()"></div>
+<div class="grid">
+<a class="card" href="https://youtube.com"><span class="icon"><img src="https://cdn.simpleicons.org/youtube/FF0000"></span>YouTube</a>
+<a class="card" href="https://twitch.tv"><span class="icon"><img src="https://cdn.simpleicons.org/twitch/BB86FC"></span>Twitch</a>
+<a class="card" href="https://discord.com"><span class="icon"><img src="https://cdn.simpleicons.org/discord/8AB4F8"></span>Discord</a>
+<a class="card" href="https://store.steampowered.com"><span class="icon"><img src="https://cdn.simpleicons.org/steam/FFFFFF"></span>Steam</a>
+<a class="card" href="https://reddit.com"><span class="icon"><img src="https://cdn.simpleicons.org/reddit/FF7139"></span>Reddit</a>
+<a class="card" href="https://netflix.com"><span class="icon"><img src="https://cdn.simpleicons.org/netflix/E50914"></span>Netflix</a>
+</div>
+<script>
+function go(){let v=document.getElementById('q').value.trim();if(!v)return;let u=v.includes('.')&&!v.includes(' ')?(v.startsWith('http')?v:'https://'+v):'https://duckduckgo.com/?q='+encodeURIComponent(v);location.href=u;}
+document.getElementById('q').focus();
+(function(){let q=new URLSearchParams(location.search);let l=(q.get('lang')||'french').toLowerCase();let m={french:'Rechercher avec DuckDuckGo',english:'Search with DuckDuckGo',spanish:'Buscar con DuckDuckGo',german:'Mit DuckDuckGo suchen',italian:'Cerca con DuckDuckGo',portuguese:'Pesquisar com DuckDuckGo',brazilianportuguese:'Pesquisar com DuckDuckGo',russian:'Iskat s DuckDuckGo',arabic:'Abhath ma DuckDuckGo',dutch:'Zoeken met DuckDuckGo',polish:'Szukaj z DuckDuckGo',turkish:'DuckDuckGo ile ara',japanese:'DuckDuckGo de kensaku',korean:'DuckDuckGo ro geomsaek',ukrainian:'Shukaty z DuckDuckGo'};document.getElementById('q').placeholder=m[l]||m.english;let t=q.get('theme');if(t){let link=document.createElement('link');link.rel='stylesheet';link.href=t;document.head.appendChild(link);}})();
+</script>
+</body>
+</html>
